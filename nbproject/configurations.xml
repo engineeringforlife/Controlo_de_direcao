@@ -16,6 +16,8 @@
         <itemPath>mcc_generated_files/ccp5.h</itemPath>
         <itemPath>mcc_generated_files/adc.h</itemPath>
         <itemPath>mcc_generated_files/tmr1.h</itemPath>
+        <itemPath>mcc_generated_files/epwm2.h</itemPath>
+        <itemPath>mcc_generated_files/tmr2.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
@@ -36,6 +38,8 @@
         <itemPath>mcc_generated_files/ccp5.c</itemPath>
         <itemPath>mcc_generated_files/adc.c</itemPath>
         <itemPath>mcc_generated_files/tmr1.c</itemPath>
+        <itemPath>mcc_generated_files/tmr2.c</itemPath>
+        <itemPath>mcc_generated_files/epwm2.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
       <itemPath>xlcd.c</itemPath>
@@ -43,7 +47,6 @@
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false">
-      <itemPath>Makefile</itemPath>
       <itemPath>MyConfig.mc3</itemPath>
     </logicalFolder>
   </logicalFolder>
