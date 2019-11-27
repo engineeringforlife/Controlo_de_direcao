@@ -56,6 +56,8 @@
         volatile unsigned char flag_CNT1=0;
         int valor=0;
         char adc_flag=0;
+        uint16_t k=0;
+        
         //volatile int valor ;
 
 void emrgencia(void) {
@@ -64,10 +66,13 @@ void emrgencia(void) {
         emerg_flag = 1; //a emergencia foi ativada
         start_flag = 0; //desliga o sistema
         INTCON2bits.INTEDG0 = 1; //muda configuração de flanco
+        TMR2_StartTimer();
+        
     } else //flanco ascendente(larga o botão)
     {
         emerg_flag = 0; //a emergencia foi desativada
         INTCON2bits.INTEDG0 = 0; //muda configuração de flanco  
+        TMR2_StopTimer();
     }
     write_flag = 1;
 
@@ -128,6 +133,8 @@ void main(void)
 {
         // Initialize the device
         SYSTEM_Initialize();
+        
+        TMR2_StopTimer();
 
     
         char name1[21] = "DAVID DRUMOND";
@@ -249,6 +256,9 @@ void main(void)
             putsXLCD(valor_analog);
             adc_flag=0;
         }
+        
+
+       
     }
 }
 

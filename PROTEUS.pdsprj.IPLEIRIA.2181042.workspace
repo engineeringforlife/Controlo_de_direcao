@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8' standalone='yes'?>
 <WORKSPACE>
  <FRAME activewindow="0">
-  <PLACEMENT>2c0000000200000003000000ffffffffffffffffffffffffffffffff3c000000180000005806000006040000</PLACEMENT>
+  <PLACEMENT>2c00000002000000030000000083ffff0083ffffffffffffffffffff3c000000180000005806000006040000</PLACEMENT>
   <WINDOW type="default" module="ISIS"/>
  </FRAME>
  <MODULE name="VSMDEBUG">
@@ -145,6 +145,21 @@
    </POPUP>
    <POPUP w="40" x="575" flags="00000008" y="518" h="3" pid="1" iid="25">
     <PROPERTIES/>
+   </POPUP>
+   <POPUP w="506" x="218" flags="00000000" y="164" h="285" pid="0" iid="7">
+    <PROPERTIES>
+     <ITEM name="CHANNEL">0</ITEM>
+     <ITEM name="IPS1">0</ITEM>
+     <ITEM name="IPS2">0</ITEM>
+     <ITEM name="MODE">0</ITEM>
+     <ITEM name="TIMEBASE">7</ITEM>
+     <ITEM name="TRIGGER">90</ITEM>
+     <ITEM name="XPOS">250</ITEM>
+     <ITEM name="YGAIN1">3</ITEM>
+     <ITEM name="YGAIN2">5</ITEM>
+     <ITEM name="YPOS1">200</ITEM>
+     <ITEM name="YPOS2">200</ITEM>
+    </PROPERTIES>
    </POPUP>
   </PWI>
  </MODULE>
