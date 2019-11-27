@@ -1,26 +1,24 @@
 /**
-  Generated Pin Manager File
+  ECCP1 Generated Driver File
 
-  Company:
+  @Company
     Microchip Technology Inc.
 
-  File Name:
-    pin_manager.c
+  @File Name
+    eccp1.c
 
-  Summary:
-    This is the Pin Manager file generated using PIC10 / PIC12 / PIC16 / PIC18 MCUs
+  @Summary
+    This is the generated driver implementation file for the ECCP1 driver using PIC10 / PIC12 / PIC16 / PIC18 MCUs
 
-  Description:
-    This header file provides implementations for pin APIs for all pins selected in the GUI.
+  @Description
+    This source file provides implementations for driver APIs for ECCP1.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.77
         Device            :  PIC18F45K22
-        Driver Version    :  2.11
+        Driver Version    :  2.02
     The generated drivers are tested against the following:
         Compiler          :  XC8 2.05 and above
-        MPLAB             :  MPLAB X 5.20
-
-    Copyright (c) 2013 - 2015 released Microchip Technology Inc.  All rights reserved.
+         MPLAB 	          :  MPLAB X 5.20
 */
 
 /*
@@ -46,62 +44,57 @@
     SOFTWARE.
 */
 
-#include "pin_manager.h"
+/**
+  Section: Included Files
+*/
 
+#include <xc.h>
+#include "eccp1.h"
 
+/**
+  Section: Compare Module APIs:
+*/
 
-
-
-void PIN_MANAGER_Initialize(void)
+void ECCP1_Initialize(void)
 {
-    /**
-    LATx registers
-    */
-    LATE = 0x00;
-    LATD = 0x00;
-    LATA = 0x00;
-    LATB = 0x00;
-    LATC = 0x00;
-
-    /**
-    TRISx registers
-    */
-    TRISE = 0x07;
-    TRISA = 0xFF;
-    TRISB = 0xFF;
-    TRISC = 0xFB;
-    TRISD = 0x00;
-
-    /**
-    ANSELx registers
-    */
-    ANSELD = 0x00;
-    ANSELC = 0xF8;
-    ANSELB = 0x3C;
-    ANSELE = 0x07;
-    ANSELA = 0x2F;
-
-    /**
-    WPUx registers
-    */
-    WPUB = 0x03;
-    INTCON2bits.nRBPU = 0;
-
-
-
-
-
-
-   
+    // Set the ECCP1 to the options selected in the User Interface
+	
+	// CCP1M Software Interrupt; DC1B 0; P1M single; 
+	CCP1CON = 0x0A;    
+	
+	// CCPR1H 0; 
+	CCPR1H = 0x00;    
+	
+	// CCPR1L 0; 
+	CCPR1L = 0x00;    
     
-}
-  
-void PIN_MANAGER_IOC(void)
-{   
-	// Clear global Interrupt-On-Change flag
-    INTCONbits.RBIF = 0;
+    // Clear the ECCP1 interrupt flag
+    PIR1bits.CCP1IF = 0;
+
+    // Enable the ECCP1 interrupt
+    PIE1bits.CCP1IE = 1;
+
+	// Selecting Timer3
+	CCPTMRS0bits.C1TSEL = 0x1;
 }
 
+void ECCP1_SetCompareCount(uint16_t compareCount)
+{
+    CCP1_PERIOD_REG_T module;
+    
+    // Write the 16-bit compare value
+    module.ccpr1_16Bit = compareCount;
+    
+    CCPR1L = module.ccpr1l;
+    CCPR1H = module.ccpr1h;
+}
+
+void ECCP1_CompareISR(void)
+{
+    // Clear the ECCP1 interrupt flag
+    PIR1bits.CCP1IF = 0;
+    LATCbits.LATC2=0;
+}
 /**
  End of File
 */

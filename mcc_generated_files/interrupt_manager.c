@@ -59,7 +59,13 @@ void  INTERRUPT_Initialize (void)
     // ADI - high priority
     IPR1bits.ADIP = 1;
 
+    // CCPI - high priority
+    IPR1bits.CCP1IP = 1;
+
     // Interrupt INT0I has no priority bit. It will always be called from the High Interrupt Vector
+
+    // TMRI - high priority
+    IPR2bits.TMR3IP = 1;
 
     // TMRI - high priority
     IPR1bits.TMR1IP = 1;
@@ -77,9 +83,17 @@ void __interrupt() INTERRUPT_InterruptManagerHigh (void)
     {
         ADC_ISR();
     }
+    else if(PIE1bits.CCP1IE == 1 && PIR1bits.CCP1IF == 1)
+    {
+        ECCP1_CompareISR();
+    }
     else if(INTCONbits.INT0IE == 1 && INTCONbits.INT0IF == 1)
     {
         INT0_ISR();
+    }
+    else if(PIE2bits.TMR3IE == 1 && PIR2bits.TMR3IF == 1)
+    {
+        TMR3_ISR();
     }
     else if(PIE1bits.TMR1IE == 1 && PIR1bits.TMR1IF == 1)
     {

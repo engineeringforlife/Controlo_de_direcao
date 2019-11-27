@@ -94,6 +94,11 @@ void convert_timer (void){
     ADC_StartConversion();
 
 }
+void Tpwm (void){
+    LATCbits.LATC2=1;
+    ECCP1_SetCompareCount(10000);
+    
+}
 
 void CGRamAddr0(void)
 {
@@ -206,7 +211,7 @@ void main(void)
     INT0_SetInterruptHandler(emrgencia);
     
     TMR1_SetInterruptHandler(convert_timer);
-    
+    TMR3_SetInterruptHandler(Tpwm);
     //  ADC_SelectChannel(0);
     //  ADC_StartConversion();
             
