@@ -54,12 +54,15 @@
         volatile unsigned char start_flag=0;
         volatile unsigned char write_flag=0;    //ativada para escrita de start/ stop(apenas 1 vez))
         volatile unsigned char flag_CNT1=0;
+        //variavel a ser alterada em função de uma entrada PWM a ser analizada
+        volatile unsigned int  angulo_dir=0;
         int valor=0;
         char adc_flag=0;
-        uint16_t k=0;
+        
         
         //volatile int valor ;
-
+    /*Função chamda por Extern_ISR, coloca variàveis auxiliares a on para escrita no display
+    Gere o botão de emergência. Se emergência ativada, então buzzer ON(PWM no pino RC2)*/
 void emrgencia(void) {
     if (INTCON2bits.INTEDG0 == 0) //flanco descendente(carrega no botão)
     {
@@ -77,9 +80,8 @@ void emrgencia(void) {
     write_flag = 1;
 
 }
-
+//Função chamda por Extern_ISR, coloca variàveis auxiliares a on para escrita no display
 void start(void) {
- 
         if (start_flag == 1) {
             start_flag = 0; //sistema off
         } else if (start_flag == 0) {
@@ -88,15 +90,19 @@ void start(void) {
         write_flag = 1;
 
 }
-
+//Função utiliza o periodo do timer 1
 void convert_timer (void){
-
     ADC_StartConversion();
-
 }
+
+//Função chamada a cada 21 ms. define o periodo do PWM. Utiliza o timer 3
+//Para uma variação de 0 a 180º considere.se uma variação de 3000 a 6000 no registo TMR3
+//Falta criar o algoritmo de deslocamento. Aletera apos conversa com prof Luis conde
 void Tpwm (void){
+    
+    
     LATCbits.LATC2=1;
-    ECCP1_SetCompareCount(10000);
+    ECCP1_SetCompareCount(3000+1500);
     
 }
 
@@ -148,12 +154,10 @@ void main(void)
        // char project_title2[40]= "UM PROCESSO DE INJECCAO";
         int i;
         int j;
-
-        
+       
                
     //Inicialização do LCD:
-
-    
+   
     OpenXLCD(FOUR_BIT & LINES_5X7);
     while (BusyXLCD());
     WriteCmdXLCD(DON & CURSOR_OFF & BLINK_OFF);
@@ -162,8 +166,7 @@ void main(void)
     while (BusyXLCD());
     WriteCmdXLCD(CLEAR_LCD);
     while (BusyXLCD());
-    CGRamAddr0();   //carrega o caracter especial Ç
-    
+    CGRamAddr0();   //carrega o caracter especial Ç  
     WriteCmdXLCD(LINE1CLUN1);
     while (BusyXLCD());
     putsXLCD(name1);
@@ -181,7 +184,7 @@ void main(void)
 
     while (BusyXLCD());
     WriteCmdXLCD(LINE2CLUN1);
-    putsXLCD("UM PROCESSO DE INJE");
+    putsXLCD("DIREC");
     while (BusyXLCD());
      putcXLCD(CARACTER_C);
      while (BusyXLCD());
@@ -250,7 +253,7 @@ void main(void)
             }
 
         }
-
+        //Atualiza os valores do ADC
         if (adc_flag == 1) {
             float angulo= 0.1759530792*valor;
             char valor_analog[5];
@@ -261,6 +264,7 @@ void main(void)
             putsXLCD(valor_analog);
             adc_flag=0;
         }
+        
         
 
        

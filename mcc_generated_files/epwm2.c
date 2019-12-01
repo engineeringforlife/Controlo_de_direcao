@@ -55,7 +55,7 @@
   Section: Macro Declarations
 */
 
-#define PWM2_INITIALIZE_DUTY_VALUE    375
+#define PWM2_INITIALIZE_DUTY_VALUE    373
 
 /**
   Section: EPWM Module APIs
@@ -65,8 +65,8 @@ void EPWM2_Initialize(void)
 {
     // Set the EPWM2 to the options selected in the User Interface
 	
-	// CCP2M P2A,P2C: active high; P2B,P2D: active high; DC2B 3; P2M single; 
-	CCP2CON = 0x3C;    
+	// CCP2M P2A,P2C: active high; P2B,P2D: active high; DC2B 1; P2M single; 
+	CCP2CON = 0x1C;    
 	
 	// CCP2ASE operating; PSS2BD low; PSS2AC low; CCP2AS disabled; 
 	ECCP2AS = 0x00;    

@@ -63,8 +63,8 @@ void TMR2_Initialize(void)
 {
     // Set TMR2 to the options selected in the User Interface
 
-    // PR2 187; 
-    PR2 = 0xBB;
+    // PR2 186; 
+    PR2 = 0xBA;
 
     // TMR2 0; 
     TMR2 = 0x00;
@@ -116,7 +116,6 @@ bool TMR2_HasOverflowOccured(void)
     {
         // Clearing IF flag.
         PIR1bits.TMR2IF = 0;
-        
     }
     return status;
 }
