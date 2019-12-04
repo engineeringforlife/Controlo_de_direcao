@@ -60,6 +60,7 @@
 #include "eccp1.h"
 #include "ext_int.h"
 #include "adc.h"
+#include "eusart1.h"
 
 
 
