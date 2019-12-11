@@ -61,6 +61,7 @@ char adc_flag = 0;
 int my_duty = 0, my_duty_aux = 0;
 
 
+
 //volatile int valor ;
 /*Função chamda por Extern_ISR, coloca variàveis auxiliares a on para escrita no display
 Gere o botão de emergência. Se emergência ativada, então buzzer ON(PWM no pino RC2)*/
@@ -173,7 +174,15 @@ void main(void) {
     int menu = 1;
     char mostra_menu = 1;
     char caracter_recebido = 0;
-
+    char op;
+    float KP=0.0, KI=0.0, KD=0.0;
+    char V_KP[10] ={};
+    char V_KI[10] ={};
+    char V_KD[10] ={};
+    int index=0;
+    
+    float angulo;
+    char valor_analog[50];
     //Fica a duvida de as configurações devem estar antes ou depois da apresentação
     // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts
     // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global and Peripheral Interrupts
@@ -283,8 +292,8 @@ void main(void) {
         }
         //Atualiza os valores do ADC
         if (adc_flag == 1) {
-            float angulo = 0.1759530792 * valor;
-            char valor_analog[50];
+            angulo = (0.003515625 * valor * 50) - 90;
+            valor_analog[50];
             sprintf(valor_analog, "Deslocamento= %.2f   ", angulo);
             WriteCmdXLCD(LINE2CLUN1);
             while (BusyXLCD());
@@ -324,25 +333,18 @@ void main(void) {
                 break;
             case 11:
                 if (mostra_menu == 1) {
-                    printf("\r\n1 - 10 graus");
-                    printf("\r\n2 - 15 graus");
-                    printf("\r\n3 - 20 graus");
-                    printf("\r\n4 - 25 graus");
-                    printf("\r\n5 - 30 graus");
-                    printf("\r\nX - Recuar");
-                    printf("\r\nOpcao: ");
+                    printf("\r\nPara sair pressione ENTER");       
                     mostra_menu = 0;
                 }
+                printf("\r\nAngulo atual: %.2f \tSetpoint: %.2f", angulo, 0.06*my_duty-90);
                 if (caracter_recebido == 1) {
                     // TODO: verificar que caracter recebido é válido
-                    if (!(rxData == 'x') && !(rxData == 'X')) {
-                        // Conversão do código ASCII para inteiro: rxData - 48
-                        temperatura = 5 + (rxData - 48) * 5;
-                    }
-                    menu = 1;
+                    if (rxData == 13) {
+                                            menu = 1;
                     mostra_menu = 1;
                     caracter_recebido = 0;
                     printf("\r\n");
+                    }
                 }
                 break;
             case 12:
@@ -373,8 +375,12 @@ void main(void) {
                 break;
             case 14:
                  if (mostra_menu == 1) {
-                    printf(" Introduza os valores de KP, KI, KD");
-                    printf("\r\nPrima uma tecla... ");
+                    printf(" Os valores atuais de KP, KI, KD sao os seguintes:");
+                    printf("\r\n\t1-KP= %.2f", KP);
+                    printf("\r\n\t2-KI= %.2f", KI);
+                    printf("\r\n\t3-KD= %.2f", KD);
+                    printf("\r\nQual a variavel que pretende alterar?(1,2ou 3?)");
+                    printf("\r\n\tPara sair pressione qualquer techa");
                     mostra_menu = 0;
                 }
                 if (caracter_recebido == 1) {
@@ -382,21 +388,89 @@ void main(void) {
                     mostra_menu = 1;
                     caracter_recebido = 0;
                     printf("\r\n");
+                    menu = 20 + (rxData - 48);
                 }
                 break;
             case 15:
-                 if (mostra_menu == 1) {
-                    printf("\r\nTemperatura atual = %d", temperatura);
-                    printf("\r\nPrima uma tecla... ");
+                if (mostra_menu == 1) {
+                    printf("Indique o valor máximo simétrico de deslocamento: ");
                     mostra_menu = 0;
                 }
                 if (caracter_recebido == 1) {
-                    menu = 1;
-                    mostra_menu = 1;
+                    V_KP[index] = rxData;
+                    index++;
+
+                    if (rxData == 13) { //enter pressionado
+                        V_KP[index] = '\0';
+                        KP = atof(V_KP);
+                        menu = 14; //volta ao menu anterior
+                        mostra_menu = 1;
+
+                        index = 0;
+                    }
                     caracter_recebido = 0;
-                    printf("\r\n");
                 }
                 break;
+            case 21:
+                if (mostra_menu == 1) {
+                    printf("Introduza o novo valor de KP: ");
+                    mostra_menu = 0;
+                }
+                if (caracter_recebido == 1) {
+                    V_KP[index] = rxData;
+                    index++;
+
+                    if (rxData == 13) { //enter pressionado
+                        V_KP[index] = '\0';
+                        KP = atof(V_KP);
+                        menu = 14; //volta ao menu anterior
+                        mostra_menu = 1;
+                        index = 0;
+                    }
+                    caracter_recebido = 0;
+                }
+                    break;
+                    case 22:
+                    if (mostra_menu == 1) {
+                        printf("Introduza o novo valor de KI: ");
+                        mostra_menu = 0;
+                    }
+                    if (caracter_recebido == 1) {
+                        V_KI[index] = rxData;
+                        index++;
+
+                        if (rxData == 13) { //enter pressionado
+                            V_KI[index] = '\0';
+                            KI = atof(V_KI);
+                            menu = 14; //volta ao menu anterior
+                            mostra_menu = 1;
+
+                            index = 0;
+                        }
+                        caracter_recebido = 0;
+                    }
+                        break;
+                        case 23:
+                            if (mostra_menu == 1) {
+                        printf("Introduza o novo valor de KD: ");
+                        mostra_menu = 0;
+                    }
+                    if (caracter_recebido == 1) {
+                        V_KD[index] = rxData;
+                        index++;
+
+                        if (rxData == 13) { //enter pressionado
+                            V_KD[index] = '\0';
+                            KD = atof(V_KD);
+                            menu = 14; //volta ao menu anterior
+                            mostra_menu = 1;
+
+                            index = 0;
+                        }
+                        caracter_recebido = 0;
+                    }
+                break;
+
                 
                 
             default:
@@ -405,13 +479,18 @@ void main(void) {
                 mostra_menu = 1;
                 break;
         
+        
+
+                    }
+                }
         }
+    
 
 
+ 
+   
 
 
-    }
-}
 
 
 /*
