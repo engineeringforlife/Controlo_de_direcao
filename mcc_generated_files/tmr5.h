@@ -330,41 +330,74 @@ uint8_t TMR5_CheckGateValueStatus(void);
 
 /**
   @Summary
-    Get the TMR5 overflow status.
+    Implements ISR
 
   @Description
-    This routine get the TMR5 overflow status.
+    This routine is used to implement the ISR for the interrupt-driven
+    implementations.
+
+  @Returns
+    None
+
+  @Param
+    None
+*/
+void TMR5_ISR(void);
+
+
+/**
+  @Summary
+    Set Timer Interrupt Handler
+
+  @Description
+    This sets the function to be called during the ISR
 
   @Preconditions
-    The TMR5_Initialize() routine should be called
-    prior to use this routine.
+    Initialize  the TMR5 module with interrupt before calling this.
+
+  @Param
+    Address of function to be set
+
+  @Returns
+    None
+*/
+ void TMR5_SetInterruptHandler(void (* InterruptHandler)(void));
+
+/**
+  @Summary
+    Timer Interrupt Handler
+
+  @Description
+    This is a function pointer to the function that will be called during the ISR
+
+  @Preconditions
+    Initialize  the TMR5 module with interrupt before calling this isr.
 
   @Param
     None
 
   @Returns
-    true  - Overflow has occured.
-    false - Overflow has not occured.
-
-  @Comment
-
-
-  @Example
-     <code>
-     TMR5_Initialize();
-
-     TMR5_StartTimer();
-
-    while(1)
-    {
-        if(TMR5_HasOverflowOccured())
-        {
-            TMR5_StopTimer();
-        }
-    }
-    </code>
+    None
 */
-bool TMR5_HasOverflowOccured(void);
+extern void (*TMR5_InterruptHandler)(void);
+
+/**
+  @Summary
+    Default Timer Interrupt Handler
+
+  @Description
+    This is the default Interrupt Handler function
+
+  @Preconditions
+    Initialize  the TMR5 module with interrupt before calling this isr.
+
+  @Param
+    None
+
+  @Returns
+    None
+*/
+void TMR5_DefaultInterruptHandler(void);
 
 
 #ifdef __cplusplus  // Provide C++ Compatibility

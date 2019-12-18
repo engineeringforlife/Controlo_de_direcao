@@ -54,6 +54,8 @@ volatile unsigned char emerg_flag = 0;
 volatile unsigned char start_flag = 0;
 volatile unsigned char write_flag = 0; //ativada para escrita de start/ stop(apenas 1 vez))
 volatile unsigned char flag_CNT1 = 0;
+volatile unsigned char cnt_01 = 0;
+
 //variavel a ser alterada em função de uma entrada PWM a ser analizada
 volatile unsigned int angulo_dir = 0;
 int valor = 0;
@@ -97,6 +99,9 @@ void start(void) {
 void convert_timer(void) {
     ADC_StartConversion();
 }
+void aux_Timer (void){
+    cnt_01++;
+}
 
 //Função chamada a cada 21 ms. define o periodo do PWM. Utiliza o timer 3
 //Para uma variação de 0 a 180º considere.se uma variação de 3000 a 6000 no registo TMR3
@@ -106,6 +111,7 @@ void Tpwm(void) {
 
 
     LATCbits.LATC2 = 1;
+    /*
     my_duty_aux++;
     if (my_duty_aux > 500) {
         my_duty_aux = 0;
@@ -119,10 +125,12 @@ void Tpwm(void) {
         if (my_duty > 3000)
             my_duty = 0;
          */
+    
+    
          ECCP1_SetCompareCount(3000 + my_duty);
     }
 
-}
+
 
 void CGRamAddr0(void) {
     while (BusyXLCD());
@@ -168,6 +176,8 @@ void main(void) {
     // char project_title2[40]= "UM PROCESSO DE INJECCAO";
     int i;
     int j;
+    int l=0;  
+    int c=0;
     //
     uint8_t rxData;
     int temperatura = 20;
@@ -183,6 +193,9 @@ void main(void) {
     
     float angulo;
     char valor_analog[50];
+    float t_estabelecimento[3][5];
+    float erro_offset [5];
+    
     //Fica a duvida de as configurações devem estar antes ou depois da apresentação
     // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts
     // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global and Peripheral Interrupts
@@ -199,6 +212,8 @@ void main(void) {
 
     TMR1_SetInterruptHandler(convert_timer);
     TMR3_SetInterruptHandler(Tpwm);
+    TMR5_SetInterruptHandler(aux_Timer);     //temporizador auxiliar
+    TMR5_StopTimer();
     //  ADC_SelectChannel(0);
     //  ADC_StartConversion();
 
@@ -318,6 +333,7 @@ void main(void) {
                     printf("\r\n3 - Visualizar erros de offset das 15 ultimas operações");
                     printf("\r\n4 - Alterar os parâmetros do controlador");
                     printf("\r\n5 - Ajustar os valores maximo e minimo de deslocamento dos servo");
+                    printf("\r\n6 - Deslocar o servo topo a topo");
                     
                     printf("\r\nOpcao: ");
                     mostra_menu = 0;
@@ -338,7 +354,6 @@ void main(void) {
                 }
                 printf("\r\nAngulo atual: %.2f \tSetpoint: %.2f", angulo, 0.06*my_duty-90);
                 if (caracter_recebido == 1) {
-                    // TODO: verificar que caracter recebido é válido
                     if (rxData == 13) {
                                             menu = 1;
                     mostra_menu = 1;
@@ -349,21 +364,32 @@ void main(void) {
                 break;
             case 12:
                 if (mostra_menu == 1) {
-                    printf("\r\nTemperatura atual = %d", temperatura);
-                    printf("\r\nPrima uma tecla... ");
+                    printf("\r\nTempo de estabalecimento das ultimas operacoes");
+                    printf("\r\nP.Inicial   P.Final T.Estabelecimento");
+                    for (l=0 ; l<5 ; l++){
+                        printf("\r\n");
+                        printf("%.2f        %.2f    %.2f",t_estabelecimento[l][1], t_estabelecimento[l][2] ,t_estabelecimento[l][3]);
+                    }
                     mostra_menu = 0;
+                    printf("\r\nPressione ENTER para sair");
+                    
                 }
                 if (caracter_recebido == 1) {
+                    if(rxData == 13){
                     menu = 1;
                     mostra_menu = 1;
                     caracter_recebido = 0;
-                    printf("\r\n");
+                    l=0;
+                    printf("\r\n"); 
+                    }
                 }
                 break;
             case 13:
                  if (mostra_menu == 1) {
-                    printf("\r\nTemperatura atual = %d", temperatura);
-                    printf("\r\nPrima uma tecla... ");
+                    printf("\r\nErros de ofset das ultimas operacoes");
+                    for(l=0 ; l<5 ; l++){
+                        printf("%dº- %.2f", l, erro_offset);
+                    }
                     mostra_menu = 0;
                 }
                 if (caracter_recebido == 1) {
@@ -371,6 +397,7 @@ void main(void) {
                     mostra_menu = 1;
                     caracter_recebido = 0;
                     printf("\r\n");
+                    l=0;
                 }
                 break;
             case 14:
@@ -411,11 +438,41 @@ void main(void) {
                     caracter_recebido = 0;
                 }
                 break;
+                
+            case 16:
+                if (mostra_menu == 1) {
+                    printf("\r\nA Deslocar servo...");
+                    TMR5_StartTimer();
+                    my_duty=0;
+                    mostra_menu = 0;
+                }
+                if (cnt_01>=40){    //espera 2 segundos
+                    my_duty=3000;
+                    if(cnt_01>=80){
+                        my_duty=1500;
+                        TMR5_StopTimer();
+                        cnt_01=0;
+                    }  
+                }
+                if (caracter_recebido == 1) {
+                    menu = 1;
+                    mostra_menu = 1;
+                    caracter_recebido = 0;
+                    printf("\r\n");
+                    menu = 20 + (rxData - 48);
+                    TMR5_StopTimer();
+                    cnt_01=0;
+                }
+                
+                break;
             case 21:
                 if (mostra_menu == 1) {
                     printf("Introduza o novo valor de KP: ");
+                    
                     mostra_menu = 0;
                 }
+                
+                
                 if (caracter_recebido == 1) {
                     V_KP[index] = rxData;
                     index++;

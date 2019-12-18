@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8' standalone='yes'?>
 <WORKSPACE>
  <FRAME activewindow="0">
-  <PLACEMENT>2c0000000000000001000000ffffffffffffffffffffffffffffffff41010000120000005d07000006040000</PLACEMENT>
+  <PLACEMENT>2c00000002000000020000000083ffff0083ffffffffffffffffffff41010000120000005d07000006040000</PLACEMENT>
   <WINDOW type="default" module="ISIS"/>
  </FRAME>
  <MODULE name="VSMDEBUG">
@@ -32,7 +32,7 @@
      <ITEM name="nItems">0</ITEM>
     </PROPERTIES>
    </POPUP>
-   <POPUP w="695" x="461" flags="00000000" y="152" h="459" pid="0" iid="36">
+   <POPUP w="695" x="1174" flags="00000000" y="568" h="459" pid="0" iid="36">
     <PROPERTIES/>
    </POPUP>
    <POPUP w="290" x="108" flags="00000000" y="220" h="195" pid="0" iid="26">
@@ -54,13 +54,13 @@
      <ITEM name="VSplitter1Pos">298</ITEM>
     </PROPERTIES>
    </POPUP>
-   <POPUP w="1330" x="590" flags="00000022" y="405" h="377" pid="0" iid="27">
+   <POPUP w="1330" x="357" flags="00000022" y="562" h="377" pid="0" iid="27">
     <PROPERTIES>
      <ITEM name="AutoEcho">0</ITEM>
      <ITEM name="HexMode">0</ITEM>
     </PROPERTIES>
    </POPUP>
-   <POPUP w="52" x="168" flags="00000008" y="280" h="12" pid="3" iid="29">
+   <POPUP w="434" x="168" flags="00000008" y="280" h="203" pid="3" iid="29">
     <PROPERTIES/>
    </POPUP>
    <POPUP w="16" x="188" flags="0000000a" y="300" h="32" pid="7" iid="29">
@@ -123,7 +123,7 @@
      <ITEM name="TopLineAddress">00300000</ITEM>
     </PROPERTIES>
    </POPUP>
-   <POPUP w="18" x="308" flags="00000008" y="420" h="32" pid="10" iid="29">
+   <POPUP w="162" x="308" flags="00000008" y="420" h="463" pid="10" iid="29">
     <PROPERTIES/>
    </POPUP>
    <POPUP w="8" x="328" flags="00000002" y="440" h="8" pid="13" iid="29">
@@ -146,7 +146,7 @@
      <ITEM name="TopLineAddress">00000000</ITEM>
     </PROPERTIES>
    </POPUP>
-   <POPUP w="40" x="368" flags="00000008" y="480" h="3" pid="1" iid="21">
+   <POPUP w="338" x="368" flags="00000008" y="480" h="86" pid="1" iid="21">
     <PROPERTIES/>
    </POPUP>
    <POPUP w="290" x="48" flags="00000000" y="160" h="195" pid="0" iid="37">

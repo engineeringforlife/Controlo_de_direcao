@@ -52,6 +52,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "interrupt_manager.h"
+#include "tmr5.h"
 #include "tmr3.h"
 #include "tmr1.h"
 #include "tmr2.h"
@@ -60,6 +61,7 @@
 #include "eccp1.h"
 #include "ext_int.h"
 #include "adc.h"
+#include "eusart2.h"
 #include "eusart1.h"
 
 
