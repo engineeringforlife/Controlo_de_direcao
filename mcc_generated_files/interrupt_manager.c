@@ -59,6 +59,12 @@ void  INTERRUPT_Initialize (void)
     // ADI - high priority
     IPR1bits.ADIP = 1;
 
+    // BCLI - high priority
+    IPR2bits.BCL1IP = 1;
+
+    // SSPI - high priority
+    IPR1bits.SSP1IP = 1;
+
     // CCPI - high priority
     IPR1bits.CCP1IP = 1;
 
@@ -88,6 +94,14 @@ void __interrupt() INTERRUPT_InterruptManagerHigh (void)
     if(PIE1bits.ADIE == 1 && PIR1bits.ADIF == 1)
     {
         ADC_ISR();
+    }
+    else if(PIE2bits.BCL1IE == 1 && PIR2bits.BCL1IF == 1)
+    {
+        I2C1_BusCollisionISR();
+    }
+    else if(PIE1bits.SSP1IE == 1 && PIR1bits.SSP1IF == 1)
+    {
+        I2C1_ISR();
     }
     else if(PIE1bits.CCP1IE == 1 && PIR1bits.CCP1IF == 1)
     {

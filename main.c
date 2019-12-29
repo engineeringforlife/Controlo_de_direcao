@@ -44,6 +44,8 @@
 #include "mcc_generated_files/mcc.h"
 #include "xlcd.h"
 #include <stdio.h>
+#define ISUM_MAX 10
+#define ISUM_MIN -10
 
 
 /*
@@ -61,6 +63,15 @@ volatile unsigned int angulo_dir = 0;
 int valor = 0;
 char adc_flag = 0;
 int my_duty = 0, my_duty_aux = 0;
+float erro_atual, erro_anterior;
+float setpoint;
+float pTerm, iTerm, dTerm, iSum;
+float angulo;
+float KP=0.0, KI=0.0, KD=0.0;
+char V_KP[10] ={};
+char V_KI[10] ={};
+char V_KD[10] ={};
+char V_Setpoint[10] = {};
 
 
 
@@ -73,6 +84,7 @@ void emrgencia(void) {
         emerg_flag = 1; //a emergencia foi ativada
         start_flag = 0; //desliga o sistema
         INTCON2bits.INTEDG0 = 1; //muda configuração de flanco
+        
         TMR2_StartTimer();
 
     } else //flanco ascendente(larga o botão)
@@ -98,6 +110,8 @@ void start(void) {
 
 void convert_timer(void) {
     ADC_StartConversion();
+        
+        
 }
 void aux_Timer (void){
     cnt_01++;
@@ -166,9 +180,7 @@ void CGRamAddr0(void) {
 void main(void) {
     // Initialize the device
     SYSTEM_Initialize();
-
     TMR2_StopTimer();
-
 
     char name1[21] = "DAVID DRUMOND";
     char name2[21] = "ADEOREL BANDEIRA";
@@ -178,23 +190,21 @@ void main(void) {
     int j;
     int l=0;  
     int c=0;
-    //
+    
     uint8_t rxData;
     int temperatura = 20;
     int menu = 1;
     char mostra_menu = 1;
     char caracter_recebido = 0;
     char op;
-    float KP=0.0, KI=0.0, KD=0.0;
-    char V_KP[10] ={};
-    char V_KI[10] ={};
-    char V_KD[10] ={};
+
     int index=0;
-    
-    float angulo;
+
     char valor_analog[50];
-    float t_estabelecimento[3][5];
+    char valor_setpoint[50];
+    float t_estabelecimento[5][3];
     float erro_offset [5];
+
     
     //Fica a duvida de as configurações devem estar antes ou depois da apresentação
     // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts
@@ -214,6 +224,7 @@ void main(void) {
     TMR3_SetInterruptHandler(Tpwm);
     TMR5_SetInterruptHandler(aux_Timer);     //temporizador auxiliar
     TMR5_StopTimer();
+    
     //  ADC_SelectChannel(0);
     //  ADC_StartConversion();
 
@@ -228,13 +239,6 @@ void main(void) {
 
     // Disable the Peripheral Interrupts
     //INTERRUPT_PeripheralInterruptDisable();
-    
-    
-    
-    
-    
-    
-    
     
     
     //Inicialização do LCD:
@@ -309,12 +313,39 @@ void main(void) {
         if (adc_flag == 1) {
             angulo = (0.003515625 * valor * 50) - 90;
             valor_analog[50];
+            valor_setpoint[50];
+            
+            sprintf(valor_setpoint, "Setpoint= %.2f   ", setpoint);
+
             sprintf(valor_analog, "Deslocamento= %.2f   ", angulo);
+            WriteCmdXLCD(LINE1CLUN1);
+            while (BusyXLCD());
+            putsXLCD(valor_setpoint);
+            
             WriteCmdXLCD(LINE2CLUN1);
             while (BusyXLCD());
-
             putsXLCD(valor_analog);
+            
+            //setpoint= 0.06*my_duty-90;
+        erro_atual=setpoint-angulo;
+        
+
+        pTerm=KP*erro_atual;
+        iSum = iSum + erro_atual;
+        if (iSum > ISUM_MAX){
+            iSum = ISUM_MAX;
+        }else
+            if(iSum < ISUM_MIN){
+                iSum = ISUM_MIN;
+            }   
+        iTerm=KI*iSum;
+        dTerm=KD*(erro_atual-erro_anterior);
+        erro_anterior=erro_atual;
+        
+        my_duty += (pTerm+iTerm+dTerm);
+            
             adc_flag = 0;
+            
         }
         
         
@@ -334,9 +365,10 @@ void main(void) {
                     printf("\r\n4 - Alterar os parâmetros do controlador");
                     printf("\r\n5 - Ajustar os valores maximo e minimo de deslocamento dos servo");
                     printf("\r\n6 - Deslocar o servo topo a topo");
-                    
+                    printf("\r\n7 - Alterar o valor do setpoint");
                     printf("\r\nOpcao: ");
                     mostra_menu = 0;
+                    
                 }
                 if (caracter_recebido == 1) {
                     // TODO: verificar que caracter recebido é válido
@@ -352,7 +384,7 @@ void main(void) {
                     printf("\r\nPara sair pressione ENTER");       
                     mostra_menu = 0;
                 }
-                printf("\r\nAngulo atual: %.2f \tSetpoint: %.2f", angulo, 0.06*my_duty-90);
+                printf("\r\nAngulo atual: %.2f \tSetpoint: %.2f", angulo, setpoint);
                 if (caracter_recebido == 1) {
                     if (rxData == 13) {
                                             menu = 1;
@@ -403,9 +435,9 @@ void main(void) {
             case 14:
                  if (mostra_menu == 1) {
                     printf(" Os valores atuais de KP, KI, KD sao os seguintes:");
-                    printf("\r\n\t1-KP= %.2f", KP);
-                    printf("\r\n\t2-KI= %.2f", KI);
-                    printf("\r\n\t3-KD= %.2f", KD);
+                    printf("\r\n\t1-KP= %.5f", KP);
+                    printf("\r\n\t2-KI= %.5f", KI);
+                    printf("\r\n\t3-KD= %.5f", KD);
                     printf("\r\nQual a variavel que pretende alterar?(1,2ou 3?)");
                     printf("\r\n\tPara sair pressione qualquer techa");
                     mostra_menu = 0;
@@ -422,10 +454,12 @@ void main(void) {
                 if (mostra_menu == 1) {
                     printf("Indique o valor máximo simétrico de deslocamento: ");
                     mostra_menu = 0;
+
                 }
                 if (caracter_recebido == 1) {
                     V_KP[index] = rxData;
                     index++;
+                   
 
                     if (rxData == 13) { //enter pressionado
                         V_KP[index] = '\0';
@@ -443,17 +477,23 @@ void main(void) {
                 if (mostra_menu == 1) {
                     printf("\r\nA Deslocar servo...");
                     TMR5_StartTimer();
-                    my_duty=0;
+                    setpoint =-90;
+                    my_duty = 0;
                     mostra_menu = 0;
+
                 }
-                if (cnt_01>=40){    //espera 2 segundos
-                    my_duty=3000;
+                if (cnt_01 >= 40) { //espera 2 segundos
+                    //my_duty=3000;
+                    setpoint = 90;
                     if(cnt_01>=80){
-                        my_duty=1500;
+                        //my_duty=1500;
+                        setpoint = 0;
                         TMR5_StopTimer();
                         cnt_01=0;
                     }  
                 }
+
+                
                 if (caracter_recebido == 1) {
                     menu = 1;
                     mostra_menu = 1;
@@ -462,6 +502,28 @@ void main(void) {
                     menu = 20 + (rxData - 48);
                     TMR5_StopTimer();
                     cnt_01=0;
+                }
+                
+                break;
+            case 17:
+                if (mostra_menu == 1) {
+                    printf("Indique o novo valor de SetPoint ( -90: 90): ");
+                    mostra_menu = 0;
+                }
+                if (caracter_recebido == 1) {
+                    V_Setpoint[index] = rxData;
+                    index++;
+                    
+
+                    if (rxData == 13) { //enter pressionado
+                        V_Setpoint[index] = '\0';
+                        setpoint = atof(V_Setpoint);
+                        menu = 1; //volta ao menu anterior
+                        mostra_menu = 1;
+
+                        index = 0;
+                    }
+                    caracter_recebido = 0;
                 }
                 
                 break;
@@ -539,7 +601,38 @@ void main(void) {
         
 
                     }
+        
+
+        
+        
                 }
+    
+    /*
+                     I2C1_MESSAGE_STATUS status;
+                    
+
+
+                    while (status != I2C1_MESSAGE_COMPLETE) {
+
+                        I2C1_MasterWrite(V_KP, 2, 0, &status);
+
+                        while (status == I2C1_MESSAGE_PENDING);
+                    }
+    
+                    I2C1_MESSAGE_STATUS status;
+                    char aux[2];
+
+
+
+                    while (status != I2C1_MESSAGE_COMPLETE) {
+
+                        I2C1_MasterRead(aux, 2, 0, &status);
+
+                        while (status == I2C1_MESSAGE_PENDING);
+                    }
+                    printf("o valor de kv e: %c", aux[1]);
+    */
+
         }
     
 
