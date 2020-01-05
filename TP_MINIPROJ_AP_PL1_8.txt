@@ -1,0 +1,11 @@
+/*
+* MINIPROJ: 	Sistema de controlo de direclão para um veículo autónomo(Auto proposta)
+* TURMA:	PL1	
+* GRUPO:	8
+*
+* NOME:		David Drumond
+* NUMERO:	2181042
+*
+* NOME:		Adeorel Bandeira
+* NUMERO:	217...
+*/

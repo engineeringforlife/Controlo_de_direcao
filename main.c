@@ -44,6 +44,7 @@
 #include "mcc_generated_files/mcc.h"
 #include "xlcd.h"
 #include <stdio.h>
+
 #define ISUM_MAX 10
 #define ISUM_MIN -10
 
@@ -68,10 +69,12 @@ float setpoint;
 float pTerm, iTerm, dTerm, iSum;
 float angulo;
 float KP=0.0, KI=0.0, KD=0.0;
-char V_KP[10] ={};
-char V_KI[10] ={};
-char V_KD[10] ={};
+uint8_t V_KP[10] ={};
+uint8_t V_KI[10] ={};
+uint8_t V_KD[10] ={};
 char V_Setpoint[10] = {};
+uint8_t aux[2];
+I2C1_MESSAGE_STATUS status;
 
 
 
@@ -103,57 +106,38 @@ void start(void) {
     } else if (start_flag == 0) {
         start_flag = 1; //sistema on
     }
-    write_flag = 1;
+    write_flag = 1;}
 
-}
-//Função utiliza o periodo do timer 1
-
+/** FUNCAO:  Convert Timer ***********************************************
+* DESCRICAO: Função que utiliza o período do Timmer1 para iniciar conversão. Define-se assim a taxa de amostragem.
+******************************************************************/
 void convert_timer(void) {
-    ADC_StartConversion();
-        
-        
+    ADC_StartConversion();  
 }
+/** FUNCAO:  Aux Timer ***********************************************
+* DESCRICAO: Serve de temporizador auxiliar para fazer temporizações de baixo rigor. O seu período é de 100ms.
+******************************************************************/
 void aux_Timer (void){
     cnt_01++;
 }
 
-//Função chamada a cada 21 ms. define o periodo do PWM. Utiliza o timer 3
-//Para uma variação de 0 a 180º considere.se uma variação de 3000 a 6000 no registo TMR3
-//Falta criar o algoritmo de deslocamento. Aletera apos conversa com prof Luis conde
 
+
+/** FUNCAO:     Tpwm ***********************************************
+* DESCRICAO:    Utiliza o timer 3 e define o período do PWM de controlo do Servo. Tem um período aprox 21 ms.
+ *              Para uma variação de 0 a 180º considere.se uma variação de 3000 a 6000 no registo TMR3
+******************************************************************/
 void Tpwm(void) {
-
-
-    LATCbits.LATC2 = 1;
-    /*
-    my_duty_aux++;
-    if (my_duty_aux > 500) {
-        my_duty_aux = 0;
-
-        if (my_duty > 0)
-            my_duty = 0;
-        else
-            my_duty = 3000;
-        /*
-        my_duty++;
-        if (my_duty > 3000)
-            my_duty = 0;
-         */
-    
-    
-         ECCP1_SetCompareCount(3000 + my_duty);
+    LATCbits.LATC2 = 1;                         //coloca a saída a 1;
+    ECCP1_SetCompareCount(3000 + my_duty);      //configura o dutty cycle
     }
 
 
-
+/** FUNCAO:     CGRamAddr0 ***********************************************
+* DESCRICAO:    Define o caratcter especial "Ç"
+******************************************************************/
 void CGRamAddr0(void) {
     while (BusyXLCD());
-    /*
-     * Endereçamento da memória CGRAM:
-     * Primeira linha do 1º caracter,
-     * índice 0 = caracter 0 * 8 bytes por caracter
-     */
-
     SetCGRamAddr(CARACTER_C);
     while (BusyXLCD());
     /*
@@ -177,15 +161,16 @@ void CGRamAddr0(void) {
     while (BusyXLCD());
 }
 
+/** FUNCAO:     main ***********************************************
+* DESCRICAO:    Contém do todo o código necessário à execução do programa
+******************************************************************/
 void main(void) {
-    // Initialize the device
+
     SYSTEM_Initialize();
     TMR2_StopTimer();
 
     char name1[21] = "DAVID DRUMOND";
     char name2[21] = "ADEOREL BANDEIRA";
-    // char project_title1[25] = "SISTEMA DE CONTROLO DE";
-    // char project_title2[40]= "UM PROCESSO DE INJECCAO";
     int i;
     int j;
     int l=0;  
@@ -205,11 +190,6 @@ void main(void) {
     float t_estabelecimento[5][3];
     float erro_offset [5];
 
-    
-    //Fica a duvida de as configurações devem estar antes ou depois da apresentação
-    // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts
-    // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global and Peripheral Interrupts
-    // Use the following macros to:
 
     // Enable high priority global interrupts
     INTERRUPT_GlobalInterruptHighEnable();
@@ -224,23 +204,7 @@ void main(void) {
     TMR3_SetInterruptHandler(Tpwm);
     TMR5_SetInterruptHandler(aux_Timer);     //temporizador auxiliar
     TMR5_StopTimer();
-    
-    //  ADC_SelectChannel(0);
-    //  ADC_StartConversion();
 
-    // Disable high priority global interrupts
-    //INTERRUPT_GlobalInterruptHighDisable();
-
-    // Disable low priority global interrupts.
-    //INTERRUPT_GlobalInterruptLowDisable();
-
-    // Enable the Peripheral Interrupts
-    //INTERRUPT_PeripheralInterruptEnable();
-
-    // Disable the Peripheral Interrupts
-    //INTERRUPT_PeripheralInterruptDisable();
-    
-    
     //Inicialização do LCD:
 
     OpenXLCD(FOUR_BIT & LINES_5X7);
@@ -281,23 +245,19 @@ void main(void) {
         WriteCmdXLCD(SHIFT_DISP_LEFT);
         while (BusyXLCD());
         for (j = 0; j < 100; j++)
-            __delay_ms(1);
+            __delay_ms(5);
     }
     while (BusyXLCD());
     WriteCmdXLCD(CLEAR_LCD); //clear LCD
 
-
-
     while (1) {
         if (write_flag) {
             write_flag = 0;
-
             while (BusyXLCD());
             if (emerg_flag == 0) {
                 if (start_flag == 0) {
                     WriteCmdXLCD(LINE1CLUN1);
                     putsXLCD("SISTEMA OFF             ");
-
                 } else {
                     WriteCmdXLCD(0b10000000); //primeira linha/primeira coluna
                     putsXLCD("SISTEMA ON               ");
@@ -307,29 +267,23 @@ void main(void) {
                 while (BusyXLCD());
                 putsXLCD("EMERGENCIA ATIVADA            ");
             }
-
         }
-        //Atualiza os valores do ADC
+        //Atualiza os valores do ADC e altera o dutyy-cycle
         if (adc_flag == 1) {
             angulo = (0.003515625 * valor * 50) - 90;
             valor_analog[50];
             valor_setpoint[50];
-            
             sprintf(valor_setpoint, "Setpoint= %.2f   ", setpoint);
-
             sprintf(valor_analog, "Deslocamento= %.2f   ", angulo);
             WriteCmdXLCD(LINE1CLUN1);
             while (BusyXLCD());
-            putsXLCD(valor_setpoint);
-            
+            putsXLCD(valor_setpoint);           
             WriteCmdXLCD(LINE2CLUN1);
             while (BusyXLCD());
             putsXLCD(valor_analog);
             
-            //setpoint= 0.06*my_duty-90;
+         //Controlador PID
         erro_atual=setpoint-angulo;
-        
-
         pTerm=KP*erro_atual;
         iSum = iSum + erro_atual;
         if (iSum > ISUM_MAX){
@@ -341,15 +295,11 @@ void main(void) {
         iTerm=KI*iSum;
         dTerm=KD*(erro_atual-erro_anterior);
         erro_anterior=erro_atual;
-        
-        my_duty += (pTerm+iTerm+dTerm);
-            
+        my_duty += (pTerm+iTerm+dTerm); 
             adc_flag = 0;
-            
         }
-        
-        
-                // Ler caracter recebido (se tiver disponivel)
+
+        // Ler caracter recebido (se tiver disponivel)
         if (EUSART1_is_rx_ready()) {
             rxData = EUSART1_Read();
             EUSART1_Write(rxData); // Mostra caracter recebido devolvendo-o para EUSART
@@ -366,9 +316,10 @@ void main(void) {
                     printf("\r\n5 - Ajustar os valores maximo e minimo de deslocamento dos servo");
                     printf("\r\n6 - Deslocar o servo topo a topo");
                     printf("\r\n7 - Alterar o valor do setpoint");
+                    printf("\r\n8 - Guardar Dados");
+                    printf("\r\n9 - Carregar dados");
                     printf("\r\nOpcao: ");
-                    mostra_menu = 0;
-                    
+                    mostra_menu = 0;  
                 }
                 if (caracter_recebido == 1) {
                     // TODO: verificar que caracter recebido é válido
@@ -454,25 +405,21 @@ void main(void) {
                 if (mostra_menu == 1) {
                     printf("Indique o valor máximo simétrico de deslocamento: ");
                     mostra_menu = 0;
-
                 }
                 if (caracter_recebido == 1) {
                     V_KP[index] = rxData;
                     index++;
-                   
-
+                  
                     if (rxData == 13) { //enter pressionado
                         V_KP[index] = '\0';
                         KP = atof(V_KP);
                         menu = 14; //volta ao menu anterior
                         mostra_menu = 1;
-
                         index = 0;
                     }
                     caracter_recebido = 0;
                 }
                 break;
-                
             case 16:
                 if (mostra_menu == 1) {
                     printf("\r\nA Deslocar servo...");
@@ -480,20 +427,15 @@ void main(void) {
                     setpoint =-90;
                     my_duty = 0;
                     mostra_menu = 0;
-
                 }
                 if (cnt_01 >= 40) { //espera 2 segundos
-                    //my_duty=3000;
                     setpoint = 90;
                     if(cnt_01>=80){
-                        //my_duty=1500;
                         setpoint = 0;
                         TMR5_StopTimer();
                         cnt_01=0;
                     }  
                 }
-
-                
                 if (caracter_recebido == 1) {
                     menu = 1;
                     mostra_menu = 1;
@@ -503,7 +445,6 @@ void main(void) {
                     TMR5_StopTimer();
                     cnt_01=0;
                 }
-                
                 break;
             case 17:
                 if (mostra_menu == 1) {
@@ -513,32 +454,46 @@ void main(void) {
                 if (caracter_recebido == 1) {
                     V_Setpoint[index] = rxData;
                     index++;
-                    
-
                     if (rxData == 13) { //enter pressionado
                         V_Setpoint[index] = '\0';
                         setpoint = atof(V_Setpoint);
                         menu = 1; //volta ao menu anterior
                         mostra_menu = 1;
-
                         index = 0;
                     }
                     caracter_recebido = 0;
-                }
-                
+                }  
                 break;
+            case 18:
+                    if (caracter_recebido == 1) {
+                        I2C1_MasterWrite(V_KP, 1, 0, &status);
+                    menu = 1;
+                    mostra_menu = 1;
+                    caracter_recebido = 0;
+                    printf("\r\n");
+                    menu = 1;
+                }
+                break;   
+            case 19:
+                    if (caracter_recebido == 1) {
+                        I2C1_MasterRead(aux, 1, 0, &status);
+                    menu = 1;
+                    mostra_menu = 1;
+                    caracter_recebido = 0;
+                    printf("\r\n");
+                    menu = 1;
+                        printf("o valor de kv e: %d", aux[0]);
+                }
+                break; 
             case 21:
                 if (mostra_menu == 1) {
                     printf("Introduza o novo valor de KP: ");
                     
                     mostra_menu = 0;
                 }
-                
-                
                 if (caracter_recebido == 1) {
                     V_KP[index] = rxData;
                     index++;
-
                     if (rxData == 13) { //enter pressionado
                         V_KP[index] = '\0';
                         KP = atof(V_KP);
@@ -583,165 +538,17 @@ void main(void) {
                             KD = atof(V_KD);
                             menu = 14; //volta ao menu anterior
                             mostra_menu = 1;
-
                             index = 0;
                         }
                         caracter_recebido = 0;
                     }
                 break;
-
-                
-                
+ 
             default:
                 printf("\r\nOpcao errada\r\n");
                 menu = 1;
                 mostra_menu = 1;
                 break;
-        
-        
-
                     }
-        
-
-        
-        
                 }
-    
-    /*
-                     I2C1_MESSAGE_STATUS status;
-                    
-
-
-                    while (status != I2C1_MESSAGE_COMPLETE) {
-
-                        I2C1_MasterWrite(V_KP, 2, 0, &status);
-
-                        while (status == I2C1_MESSAGE_PENDING);
-                    }
-    
-                    I2C1_MESSAGE_STATUS status;
-                    char aux[2];
-
-
-
-                    while (status != I2C1_MESSAGE_COMPLETE) {
-
-                        I2C1_MasterRead(aux, 2, 0, &status);
-
-                        while (status == I2C1_MESSAGE_PENDING);
-                    }
-                    printf("o valor de kv e: %c", aux[1]);
-    */
-
         }
-    
-
-
- 
-   
-
-
-
-
-/*
- void main(void) {
-    uint8_t rxData;
-    int temperatura = 20;
-    int menu = 1;
-    char mostra_menu = 1;
-    char caracter_recebido = 0;
-
-    // Initialize the device
-    SYSTEM_Initialize();
-
-    // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts
-    // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global and Peripheral Interrupts
-    // Use the following macros to:
-
-    // Enable the Global Interrupts
-    INTERRUPT_GlobalInterruptEnable();
-
-    // Disable the Global Interrupts
-    //INTERRUPT_GlobalInterruptDisable();
-
-    // Enable the Peripheral Interrupts
-    INTERRUPT_PeripheralInterruptEnable();
-
-    // Disable the Peripheral Interrupts
-    //INTERRUPT_PeripheralInterruptDisable();
-
-    while (1) {
-        // Ler caracter recebido (se tiver disponivel)
-        if (EUSART1_is_rx_ready()) {
-            rxData = EUSART1_Read();
-            EUSART1_Write(rxData); // Mostra caracter recebido devolvendo-o para EUSART
-            caracter_recebido = 1; // Indica caracter recebido disponivel em rxData
-        }
-        // Apresenta menu ou sub-menu
-        switch (menu) {
-            case 1:
-                if (mostra_menu == 1) {
-                    printf("\r\n1 - Inserir temperatura desejada");
-                    printf("\r\n2 - Mostrar temperatura atual");
-                    printf("\r\nOpcao: ");
-                    mostra_menu = 0;
-                }
-                if (caracter_recebido == 1) {
-                    // TODO: verificar que caracter recebido é válido
-                    // Conversão do código ASCII para inteiro: rxData - 48
-                    menu = 10 + (rxData - 48);
-                    mostra_menu = 1;
-                    caracter_recebido = 0;
-                    printf("\r\n");
-                }
-                break;
-            case 11:
-                if (mostra_menu == 1) {
-                    printf("\r\n1 - 10 graus");
-                    printf("\r\n2 - 15 graus");
-                    printf("\r\n3 - 20 graus");
-                    printf("\r\n4 - 25 graus");
-                    printf("\r\n5 - 30 graus");
-                    printf("\r\nX - Recuar");
-                    printf("\r\nOpcao: ");
-                    mostra_menu = 0;
-                }
-                if (caracter_recebido == 1) {
-                    // TODO: verificar que caracter recebido é válido
-                    if (!(rxData == 'x') && !(rxData == 'X')) {
-                        // Conversão do código ASCII para inteiro: rxData - 48
-                        temperatura = 5 + (rxData - 48) * 5;
-                    }
-                    menu = 1;
-                    mostra_menu = 1;
-                    caracter_recebido = 0;
-                    printf("\r\n");
-                }
-                break;
-            case 12:
-                if (mostra_menu == 1) {
-                    printf("\r\nTemperatura atual = %d", temperatura);
-                    printf("\r\nPrima uma tecla... ");
-                    mostra_menu = 0;
-                }
-                if (caracter_recebido == 1) {
-                    menu = 1;
-                    mostra_menu = 1;
-                    caracter_recebido = 0;
-                    printf("\r\n");
-                }
-                break;
-            default:
-                printf("\r\nOpcao errada\r\n");
-                menu = 1;
-                mostra_menu = 1;
-                break;
-        }
-    }
-}
-/**
- End of File
- */
- 
-
-
